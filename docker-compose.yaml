@@ -1,0 +1,40 @@
+services:
+  # PostgreSQL Database
+  postgres-db:
+    image: postgres:15.6
+    container_name: postgres-config-lab6
+    env_file:
+      - .env
+    ports:
+      - "5434:5432"
+    networks:
+      - backend
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - /root/lab6/back/envs:/envs
+
+  # Django Application
+  fastapi-app:
+    image: lab6:dev
+    container_name: fastapi-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres-db:
+        condition: service_started
+    env_file:
+      - .env
+    command: >
+      bash -c "uvicorn main:app --host 0.0.0.0 --port 8000"
+    networks:
+      - backend
+
+volumes:
+  postgres_data:
+
+networks:
+  backend:
+    driver: bridge
